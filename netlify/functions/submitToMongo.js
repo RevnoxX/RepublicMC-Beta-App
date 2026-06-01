@@ -1,32 +1,42 @@
 const { MongoClient } = require("mongodb");
 
 exports.handler = async event => {
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
+  if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
 
-  // Pulling directly from your Netlify Environment Variables
   const uri = process.env.MONGO_URI;
-  
-  if (!uri) {
-    console.error("CRITICAL ERROR: MONGO_URI is missing from Netlify environment variables.");
-    return { statusCode: 500, body: JSON.stringify({ error: "Database configuration missing" }) };
-  }
+  if (!uri) return { statusCode: 500, body: JSON.stringify({ error: "Missing DB URI" }) };
 
   const client = new MongoClient(uri);
   
   try {
     const body = JSON.parse(event.body);
-    if (!body.data || Object.keys(body.data).length === 0) {
-      return { statusCode: 400, body: "No form data" };
-    }
+    if (!body.data) return { statusCode: 400, body: "No form data" };
 
     await client.connect();
     const col = client.db("form_responses").collection("submissions");
     
-    // Catching the exact fields from your Google Form data
-    const realDiscordId = body.data["Discord ID"] || body["Discord Id"] || "";
-    const realSubmittedBy = body.data["Discord Global Name"] || body.data["Discord Username"] || body.submitted_by || "Unknown";
+    // --- THE FUZZY SEARCH FIX ---
+    let realDiscordId = "";
+    let realSubmittedBy = "";
+
+    // Scan every single question title the Google Form sent us
+    for (const [questionTitle, answer] of Object.entries(body.data)) {
+        const lowerTitle = questionTitle.toLowerCase();
+        
+        // If the question contains the words "discord id", grab the answer!
+        if (lowerTitle.includes("discord id")) {
+            realDiscordId = answer;
+        }
+        
+        // If the question contains "username" or "global name", grab it!
+        if (lowerTitle.includes("username") || lowerTitle.includes("global name")) {
+            if (!realSubmittedBy) realSubmittedBy = answer;
+        }
+    }
+
+    // Backup fallbacks
+    if (!realDiscordId) realDiscordId = body["Discord Id"] || "";
+    if (!realSubmittedBy) realSubmittedBy = body.submitted_by || "Unknown";
 
     const toInsert = {
       ...body.data,
@@ -39,7 +49,7 @@ exports.handler = async event => {
     
     await col.insertOne(toInsert);
 
-    // Send the DM Notification (Isolated so it doesn't crash the database save)
+    // --- DISCORD DM LOGIC ---
     if (process.env.DISCORD_TOKEN && realDiscordId) {
       try {
         const dmRes = await fetch('https://discord.com/api/v10/users/@me/channels', {
@@ -67,7 +77,7 @@ exports.handler = async event => {
             }
         }
       } catch (dmErr) {
-        console.log("DM sending failed silently, but DB save was successful.", dmErr.message);
+        console.log("DM failed, but DB save was successful.", dmErr.message);
       }
     }
 
