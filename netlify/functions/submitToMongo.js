@@ -20,7 +20,7 @@ exports.handler = async event => {
     // FIX: Grabbing the Discord ID properly so it's no longer "Unknown"
     const toInsert = {
       ...body.data,
-      submitted_by: body.["Discord Username"],
+      submitted_by: body.submitted_by,
       submitted_at: body.submitted_at,
       "Discord Id": body["Discord Id"], 
       timestamp: new Date(),
