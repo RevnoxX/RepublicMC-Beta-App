@@ -3,67 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <title>Republic MC - Beta Tester Application</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  
   <style>
+    /* Reset & Base Setup */
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #1a1a2e; /* Dark fallback color */
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      color: white;
+      font-family: 'VT323', monospace; /* Pixel font */
+      background-color: #1d1d1d; /* Dark dirt/stone color */
+      color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
+      overflow: hidden; /* Keeps falling blocks from creating scrollbars */
+      position: relative;
     }
 
+    /* Falling Blocks Background Animation */
+    .background-blocks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .mc-block {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background-color: #8B4513; /* Dirt brown */
+      border-top: 8px solid #32CD32; /* Grass green top */
+      box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), inset 4px 0px 0px rgba(255,255,255,0.1);
+      top: -50px;
+      animation: fall linear infinite;
+    }
+
+    /* Randomizing the blocks */
+    .b1 { left: 10%; animation-duration: 8s; animation-delay: 0s; transform: scale(0.8); }
+    .b2 { left: 30%; animation-duration: 12s; animation-delay: 2s; transform: scale(1.2); }
+    .b3 { left: 50%; animation-duration: 7s; animation-delay: 4s; }
+    .b4 { left: 70%; animation-duration: 10s; animation-delay: 1s; transform: scale(0.9); }
+    .b5 { left: 90%; animation-duration: 9s; animation-delay: 3s; transform: scale(1.5); }
+
+    @keyframes fall {
+      0% {
+        top: -50px;
+        transform: rotate(0deg);
+      }
+      100% {
+        top: 110vh;
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Main UI Container - Minecraft GUI Style */
     .container {
-      background: rgba(22, 27, 34, 0.9);
-      border-radius: 20px;
-      padding: 40px 30px;
+      background: rgba(30, 30, 30, 0.95);
+      border: 4px solid #000;
+      box-shadow: 
+        inset 4px 4px 0px #555, 
+        inset -4px -4px 0px #111,
+        0 15px 35px rgba(0,0,0,0.8);
+      padding: 30px 25px;
       width: 90%;
-      max-width: 500px;
+      max-width: 450px;
       text-align: center;
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 10; /* Keeps it above the falling blocks */
+      image-rendering: pixelated;
     }
 
     h1 {
-      font-size: 32px;
-      margin-bottom: 10px;
-      color: #7289da;
+      font-size: 42px;
+      margin: 0 0 15px 0;
+      color: #FFD700; /* Gold/Yellow text */
+      text-shadow: 3px 3px 0px #3E2723;
+      letter-spacing: 2px;
     }
 
     p {
-      font-size: 16px;
-      color: #b9bbbe;
-      line-height: 1.6;
+      font-size: 22px;
+      color: #d3d3d3;
+      line-height: 1.4;
       margin-bottom: 30px;
+      text-shadow: 1px 1px 0px #000;
     }
 
+    /* Minecraft Styled Button */
     .btn {
       display: inline-block;
-      background-color: #5865F2;
+      background-color: #3ca33c; /* Minecraft Green */
       color: white;
-      padding: 14px 28px;
-      font-size: 16px;
-      font-weight: 600;
+      padding: 12px 24px;
+      font-size: 24px;
+      font-family: 'VT323', monospace;
       text-decoration: none;
-      border-radius: 8px;
-      transition: background-color 0.2s ease, transform 0.1s ease;
+      border: 3px solid #000;
+      box-shadow: inset 3px 3px 0px #5cde5c, inset -3px -3px 0px #246324;
       cursor: pointer;
-      border: none;
+      text-transform: uppercase;
+      transition: all 0.1s;
     }
 
     .btn:hover {
-      background-color: #4752C4;
+      background-color: #45ba45;
     }
 
     .btn:active {
-      transform: scale(0.98);
+      box-shadow: inset 3px 3px 0px #246324, inset -3px -3px 0px #5cde5c;
+      transform: translateY(2px); /* Button press effect */
     }
 
+    /* Loading State */
     #loading-content {
       display: none;
     }
@@ -72,52 +133,75 @@
       margin: 20px auto;
       width: 40px;
       height: 40px;
-      border: 4px solid rgba(255,255,255,0.1);
-      border-radius: 50%;
-      border-top-color: #5865F2;
-      animation: spin 1s ease-in-out infinite;
+      background-color: #fff;
+      animation: flip 1.2s infinite ease-in-out;
+      box-shadow: inset -4px -4px 0px rgba(0,0,0,0.2);
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    @keyframes flip {
+      0% { transform: perspective(120px) rotateX(0deg) rotateY(0deg); }
+      50% { transform: perspective(120px) rotateX(-180.1deg) rotateY(0deg); }
+      100% { transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg); }
     }
 
     .countdown-text {
-      font-size: 14px;
-      color: #8e9297;
-      margin-top: 10px;
+      font-size: 20px;
+      color: #aaa;
+      margin-top: 15px;
+    }
+
+    /* Mobile View Adjustments */
+    @media (max-width: 480px) {
+      .container {
+        padding: 25px 15px;
+        border-width: 3px;
+      }
+      h1 {
+        font-size: 32px;
+      }
+      p {
+        font-size: 18px;
+      }
+      .btn {
+        font-size: 20px;
+        padding: 10px 20px;
+      }
     }
   </style>
 </head>
 <body>
 
+  <div class="background-blocks">
+    <div class="mc-block b1"></div>
+    <div class="mc-block b2"></div>
+    <div class="mc-block b3"></div>
+    <div class="mc-block b4"></div>
+    <div class="mc-block b5"></div>
+  </div>
+
   <div class="container">
     <div id="main-content">
-      <h1>Beta Tester Application</h1>
+      <h1>Republic MC</h1>
       <p>
-        Welcome to the Republic MC Beta Testing program. To apply for exclusive server access and help us track bugs, please verify your identity using Discord. You will automatically be redirected to the application form.
+        Welcome to the Beta Testing program. Verify your identity using Discord to access the application form and help us crush bugs.
       </p>
       <button class="btn" onclick="loginWithDiscord()">Login with Discord</button>
     </div>
 
     <div id="loading-content">
       <div class="spinner"></div>
-      <h2>Verifying Identity...</h2>
-      <p class="countdown-text">Redirecting you to the form in <span id="countdown">3</span> seconds...</p>
+      <h2>Verifying...</h2>
+      <p class="countdown-text">Teleporting to form in <span id="countdown">3</span>s...</p>
     </div>
   </div>
 
   <script>
     // --- CONFIGURATION ---
-    // 1. Paste your Google Form link (replace /viewform with /formResponse)
     const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdzjetddlEm39JaAZE67LAjZ3Cibl-B3XWTQa4RmGX9NqWocw/formResponse";
-    
-    // 2. Paste the exact entry IDs you copied from the pre-filled link step
-    const ENTRY_ID = "entry.674318710";          // For Discord ID
-    const ENTRY_USERNAME = "entry.569665948";    // For Discord Username
-    const ENTRY_GLOBAL_NAME = "entry.471878909"; // For Discord Global Name
+    const ENTRY_ID = "entry.674318710";          
+    const ENTRY_USERNAME = "entry.569665948";    
+    const ENTRY_GLOBAL_NAME = "entry.471878909"; 
 
-    // 3. Paste your Discord Application Client ID and your Netlify Deployment URL
     const CLIENT_ID = "1375800978888065114";
     const REDIRECT_URI = "https://rmc-beta-app.netlify.app/"; 
     // ---------------------
@@ -140,7 +224,6 @@
         const username = user.username || '';
         const discordId = user.id || '';
 
-        // Construct the URL with pre-filled Discord data
         const formURL = `${FORM_BASE}?${ENTRY_GLOBAL_NAME}=${encodeURIComponent(global)}&${ENTRY_USERNAME}=${encodeURIComponent(username)}&${ENTRY_ID}=${discordId}`;
 
         document.getElementById("main-content").style.display = "none";
