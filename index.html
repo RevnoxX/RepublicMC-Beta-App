@@ -110,7 +110,12 @@
     .btn:hover { background-color: #45ba45; }
     .btn:active { box-shadow: inset 3px 3px 0px #246324, inset -3px -3px 0px #5cde5c; transform: translateY(2px); }
 
-    #loading-content { display: none; }
+    /* New button style for entering after Discord */
+    .btn-enter { background-color: #5865F2; box-shadow: inset 3px 3px 0px #7b86f5, inset -3px -3px 0px #3c45a5; }
+    .btn-enter:hover { background-color: #6974f5; }
+    .btn-enter:active { box-shadow: inset 3px 3px 0px #3c45a5, inset -3px -3px 0px #7b86f5; }
+
+    #loading-content, #return-content { display: none; }
 
     /* The Flip Animation Spinner */
     .spinner {
@@ -132,7 +137,7 @@
     .progress-container {
       width: 100%;
       max-width: 350px;
-      height: 18px; /* Slimmer profile like MC */
+      height: 18px; 
       background-color: #222;
       border: 2px solid #000;
       margin: 40px auto 20px auto; 
@@ -148,7 +153,6 @@
       transition: width 5s linear; 
     }
 
-    /* The 'barks' / divisions over the progress bar */
     .progress-divisions {
       position: absolute;
       top: 0;
@@ -158,27 +162,26 @@
       background-image: repeating-linear-gradient(
         to right,
         transparent,
-        transparent calc(100% / 18 - 2px), /* 18 segments */
+        transparent calc(100% / 18 - 2px), 
         rgba(0, 0, 0, 0.8) calc(100% / 18 - 2px),
         rgba(0, 0, 0, 0.8) calc(100% / 18)
       );
       z-index: 2;
     }
 
-    /* XP Orbs using your uploaded image */
+    /* XP Orbs */
     .xp-orb {
       position: absolute;
       width: 24px;
       height: 24px;
       background-image: url('Experience_Orb_Value_17-36.webp');
       background-size: cover;
-      image-rendering: pixelated; /* Keeps it sharp and retro */
+      image-rendering: pixelated; 
       pointer-events: none;
       animation: absorb 0.7s ease-in forwards;
       z-index: 20;
     }
 
-    /* CSS Trick to turn the green image into a yellow image */
     .xp-orb.yellow {
       filter: hue-rotate(-60deg) brightness(1.5) saturate(1.2);
     }
@@ -214,12 +217,19 @@
   </div>
 
   <div class="container" id="gui-box">
+    
     <div id="main-content">
       <h1>Republic MC</h1>
       <p>
         Welcome to the Beta Testing program. Verify your identity using Discord to access the application form and help us crush bugs.
       </p>
-      <button class="btn" onclick="loginWithDiscord()">Login with Discord</button>
+      <button class="btn btn-enter" onclick="loginWithDiscord()">Login with Discord</button>
+    </div>
+
+    <div id="return-content">
+      <h1>Discord Linked!</h1>
+      <p>Your Discord identity has been securely verified. Click below to initialize your application transfer.</p>
+      <button class="btn" onclick="startVerification()">Enter the Server</button>
     </div>
 
     <div id="loading-content">
@@ -228,14 +238,14 @@
       
       <div class="progress-container" id="p-container">
         <div class="progress-bar" id="progressBar"></div>
-        <div class="progress-divisions"></div> </div>
+        <div class="progress-divisions"></div> 
+      </div>
 
       <p class="countdown-text">Time remaining: <span id="countdown">5</span>s...</p>
     </div>
   </div>
 
   <script>
-    // Restored to the /viewform format
     const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdzjetddlEm39JaAZE67LAjZ3Cibl-B3XWTQa4RmGX9NqWocw/viewform";
     const ENTRY_ID = "entry.674318710";          
     const ENTRY_USERNAME = "entry.569665948";    
@@ -244,9 +254,29 @@
     const CLIENT_ID = "1375800978888065114";
     const REDIRECT_URI = "https://rmc-beta-app.netlify.app/"; 
 
+    let globalToken = null; // Saves the token for after they click the button
+
     function loginWithDiscord() {
       const authURL = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
       window.location.href = authURL;
+    }
+
+    window.onload = () => {
+      const hash = window.location.hash;
+      if (hash.includes("access_token")) {
+        const params = new URLSearchParams(hash.replace("#", "?"));
+        globalToken = params.get("access_token");
+        
+        // Hide initial login, show the "Enter Server" button
+        document.getElementById("main-content").style.display = "none";
+        document.getElementById("return-content").style.display = "block";
+      }
+    };
+
+    function startVerification() {
+      if (globalToken) {
+        fetchUserAndRedirect(globalToken);
+      }
     }
 
     async function fetchUserAndRedirect(token) {
@@ -262,7 +292,8 @@
 
         const formURL = `${FORM_BASE}?${ENTRY_GLOBAL_NAME}=${encodeURIComponent(global)}&${ENTRY_USERNAME}=${encodeURIComponent(username)}&${ENTRY_ID}=${discordId}`;
 
-        document.getElementById("main-content").style.display = "none";
+        // Hide return button, show loading screen
+        document.getElementById("return-content").style.display = "none";
         document.getElementById("loading-content").style.display = "block";
 
         const statusText = document.getElementById("status-text");
@@ -279,7 +310,6 @@
           const orb = document.createElement("div");
           orb.className = "xp-orb";
           
-          // 40% chance to spawn a yellow orb instead of a green one
           if (Math.random() > 0.6) {
             orb.classList.add("yellow");
           }
@@ -289,11 +319,14 @@
           
           setTimeout(() => {
             orb.remove();
-            // Play the sound right as the orb vanishes into the bar!
+            
+            // --- THE SOUND TRIGGER ---
+            // Make sure the file name matches what you uploaded to GitHub EXACTLY!
             let xpSound = new Audio('xp.mp3'); 
-            xpSound.volume = 0.5; // Adjust from 0.0 to 1.0 if it's too loud
+            xpSound.volume = 0.5; 
             xpSound.play().catch(err => console.log("Audio blocked", err));
           }, 700); 
+
         }, 300); 
 
         let countdown = 5; 
@@ -304,8 +337,6 @@
           if (countdown === 0) {
             clearInterval(countdownInterval);
             clearInterval(orbInterval);
-            
-            // Reverted back to the standard URL redirect
             window.location.href = formURL;
           }
         }, 1000);
@@ -314,17 +345,6 @@
         console.error(err);
       }
     }
-
-    window.onload = () => {
-      const hash = window.location.hash;
-      if (hash.includes("access_token")) {
-        const params = new URLSearchParams(hash.replace("#", "?"));
-        const token = params.get("access_token");
-        if (token) {
-          fetchUserAndRedirect(token);
-        }
-      }
-    };
   </script>
 </body>
 </html>
