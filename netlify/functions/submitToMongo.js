@@ -5,7 +5,7 @@ exports.handler = async event => {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  const uri = "mongodb+srv://maya:passmayaapplication@application.z3dfcq.mongodb.net/?retryWrites=true&w=majority&appName=application";
+  const uri = "mongodb+srv://mukund260406_db_user:BX8D83Csuj1pWdD6@cluster0.dyfrdfj.mongodb.net/?appName=Cluster0";
   const client = new MongoClient(uri);
   try {
     const body = JSON.parse(event.body);
