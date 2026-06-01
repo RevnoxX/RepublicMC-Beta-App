@@ -287,7 +287,13 @@
           orb.style.left = Math.floor(Math.random() * 95) + "%"; 
           pContainer.appendChild(orb);
           
-          setTimeout(() => orb.remove(), 700); 
+          setTimeout(() => {
+            orb.remove();
+            // Play the sound right as the orb vanishes into the bar!
+            let xpSound = new Audio('xp.mp3'); 
+            xpSound.volume = 0.5; // Adjust from 0.0 to 1.0 if it's too loud
+            xpSound.play().catch(err => console.log("Audio blocked", err));
+          }, 700); 
         }, 300); 
 
         let countdown = 5; 
