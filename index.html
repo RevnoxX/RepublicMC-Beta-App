@@ -112,14 +112,30 @@
 
     #loading-content { display: none; }
 
-    /* Progress Bar & XP Orbs */
+    /* The Flip Animation Spinner */
+    .spinner {
+      margin: 10px auto 20px auto;
+      width: 40px;
+      height: 40px;
+      background-color: #fff;
+      animation: flip 1.2s infinite ease-in-out;
+      box-shadow: inset -4px -4px 0px rgba(0,0,0,0.2);
+    }
+
+    @keyframes flip {
+      0% { transform: perspective(120px) rotateX(0deg) rotateY(0deg); }
+      50% { transform: perspective(120px) rotateX(-180.1deg) rotateY(0deg); }
+      100% { transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg); }
+    }
+
+    /* Minecraft Segmented Progress Bar */
     .progress-container {
       width: 100%;
       max-width: 350px;
-      height: 24px;
+      height: 18px; /* Slimmer profile like MC */
       background-color: #222;
-      border: 3px solid #000;
-      margin: 40px auto 20px auto; /* Extra top margin for orbs */
+      border: 2px solid #000;
+      margin: 40px auto 20px auto; 
       position: relative;
       box-shadow: inset 2px 2px 0px #111;
     }
@@ -128,20 +144,43 @@
       height: 100%;
       width: 0%; 
       background-color: #32CD32; 
-      box-shadow: inset 2px 2px 0px #5cde5c, inset -2px -2px 0px #246324;
+      box-shadow: inset 0px 3px 0px #8aff8a, inset 0px -3px 0px #246324;
       transition: width 5s linear; 
     }
 
+    /* The 'barks' / divisions over the progress bar */
+    .progress-divisions {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: repeating-linear-gradient(
+        to right,
+        transparent,
+        transparent calc(100% / 18 - 2px), /* 18 segments */
+        rgba(0, 0, 0, 0.8) calc(100% / 18 - 2px),
+        rgba(0, 0, 0, 0.8) calc(100% / 18)
+      );
+      z-index: 2;
+    }
+
+    /* XP Orbs using your uploaded image */
     .xp-orb {
       position: absolute;
-      width: 14px;
-      height: 14px;
-      background-color: #8aff8a; /* Bright neon green */
-      border-radius: 50%;
-      box-shadow: 0 0 10px #32CD32, inset 3px 3px 2px #fff;
+      width: 24px;
+      height: 24px;
+      background-image: url('Experience_Orb_Value_17-36.webp');
+      background-size: cover;
+      image-rendering: pixelated; /* Keeps it sharp and retro */
       pointer-events: none;
       animation: absorb 0.7s ease-in forwards;
       z-index: 20;
+    }
+
+    /* CSS Trick to turn the green image into a yellow image */
+    .xp-orb.yellow {
+      filter: hue-rotate(-60deg) brightness(1.5) saturate(1.2);
     }
 
     @keyframes absorb {
@@ -154,24 +193,6 @@
       font-size: 20px;
       color: #aaa;
       margin-top: 15px;
-    }
-
-    /* Fullscreen Iframe Container (Hidden initially) */
-    #iframe-container {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 100;
-      background-color: #1d1d1d;
-    }
-
-    #iframe-container iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
     }
 
     @media (max-width: 480px) {
@@ -202,22 +223,19 @@
     </div>
 
     <div id="loading-content">
+      <div class="spinner"></div>
       <h2 id="status-text">Fetching player data...</h2>
       
       <div class="progress-container" id="p-container">
         <div class="progress-bar" id="progressBar"></div>
-      </div>
+        <div class="progress-divisions"></div> </div>
 
       <p class="countdown-text">Time remaining: <span id="countdown">5</span>s...</p>
     </div>
   </div>
 
-  <div id="iframe-container">
-    <iframe id="google-form" src=""></iframe>
-  </div>
-
   <script>
-    // Gently correcting to /viewform so it renders properly inside the iframe
+    // Restored to the /viewform format
     const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdzjetddlEm39JaAZE67LAjZ3Cibl-B3XWTQa4RmGX9NqWocw/viewform";
     const ENTRY_ID = "entry.674318710";          
     const ENTRY_USERNAME = "entry.569665948";    
@@ -247,28 +265,30 @@
         document.getElementById("main-content").style.display = "none";
         document.getElementById("loading-content").style.display = "block";
 
-        // Dynamic Loading Text Phases
         const statusText = document.getElementById("status-text");
         setTimeout(() => { statusText.textContent = "Building secure connection..."; }, 1500);
         setTimeout(() => { statusText.textContent = "Verifying Discord identity..."; }, 3000);
         setTimeout(() => { statusText.textContent = "Teleporting to application..."; }, 4200);
 
-        // Start the progress bar
         setTimeout(() => {
           document.getElementById("progressBar").style.width = "100%";
         }, 50);
 
-        // XP Orb Spawner
         const pContainer = document.getElementById("p-container");
         const orbInterval = setInterval(() => {
           const orb = document.createElement("div");
           orb.className = "xp-orb";
-          // Randomize horizontal position along the bar
+          
+          // 40% chance to spawn a yellow orb instead of a green one
+          if (Math.random() > 0.6) {
+            orb.classList.add("yellow");
+          }
+
           orb.style.left = Math.floor(Math.random() * 95) + "%"; 
           pContainer.appendChild(orb);
-          // Remove from DOM after animation completes
+          
           setTimeout(() => orb.remove(), 700); 
-        }, 300); // Spawns an orb every 300ms
+        }, 300); 
 
         let countdown = 5; 
         const countdownInterval = setInterval(() => {
@@ -279,13 +299,8 @@
             clearInterval(countdownInterval);
             clearInterval(orbInterval);
             
-            // Hide the Minecraft GUI and show the full-screen Google Form Iframe
-            document.getElementById("gui-box").style.display = "none";
-            document.querySelector(".background-blocks").style.display = "none";
-            
-            const iframe = document.getElementById("google-form");
-            iframe.src = formURL;
-            document.getElementById("iframe-container").style.display = "block";
+            // Reverted back to the standard URL redirect
+            window.location.href = formURL;
           }
         }, 1000);
       } catch (err) {
