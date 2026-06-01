@@ -5,7 +5,7 @@ exports.handler = async event => {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  const uri = "mongodb+srv://mukund260406_db_user:BX8D83Csuj1pWdD6@cluster0.dyfrdfj.mongodb.net/?appName=Cluster0";
+  const uri = process.env.MONGO_URI;
   const client = new MongoClient(uri);
   
   try {
@@ -17,32 +17,33 @@ exports.handler = async event => {
     await client.connect();
     const col = client.db("form_responses").collection("submissions");
     
-    // FIX: Grabbing the Discord ID properly so it's no longer "Unknown"
+    // Catching the exact fields from your Google Form data
+    const realDiscordId = body.data["Discord ID"] || body["Discord Id"] || "";
+    const realSubmittedBy = body.data["Discord Global Name"] || body.data["Discord Username"] || body.submitted_by || "Unknown";
+
     const toInsert = {
       ...body.data,
-      submitted_by: body.submitted_by,
-      submitted_at: body.submitted_at,
-      "Discord Id": body["Discord Id"], 
+      submitted_by: realSubmittedBy,
+      submitted_at: body.submitted_at || new Date().toISOString(),
+      "Discord Id": realDiscordId, // Standardizing the key for the bot
       timestamp: new Date(),
       status: "Not Seen"
     };
     await col.insertOne(toInsert);
 
-    // NEW: Send a DM Notification to the user via Discord API
-    if (process.env.DISCORD_TOKEN && body["Discord Id"]) {
+    // Send the DM Notification
+    if (process.env.DISCORD_TOKEN && realDiscordId) {
       try {
-        // 1. Open a DM channel with the user
         const dmRes = await fetch('https://discord.com/api/v10/users/@me/channels', {
           method: 'POST',
           headers: {
             'Authorization': `Bot ${process.env.DISCORD_TOKEN}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ recipient_id: body["Discord Id"] })
+          body: JSON.stringify({ recipient_id: realDiscordId })
         });
         const dmChannel = await dmRes.json();
 
-        // 2. Send the confirmation message
         if (dmChannel.id) {
           await fetch(`https://discord.com/api/v10/channels/${dmChannel.id}/messages`, {
             method: 'POST',
@@ -51,7 +52,7 @@ exports.handler = async event => {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({ 
-                content: "🎉 **Application Received!** Your Republic MC Beta Application has been successfully saved to our database. Use `!myform` in the server to check your status anytime!" 
+                content: "🎉 **Application Received!** Your Republic MC Beta Application has been successfully saved. Use `!myform` in the server to check your status!" 
             })
           });
         }
