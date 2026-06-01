@@ -44,7 +44,7 @@ exports.handler = async event => {
       submitted_at: body.submitted_at || new Date().toISOString(),
       "Discord Id": realDiscordId, 
       timestamp: new Date(),
-      status: "Not Seen"
+      status: "Pending...."
     };
     
     await col.insertOne(toInsert);
