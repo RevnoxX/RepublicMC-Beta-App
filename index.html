@@ -5,29 +5,25 @@
   <title>Republic MC - Beta Tester Application</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/x-icon" href="icon.png">
   
   <style>
-    /* Reset & Base Setup */
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       padding: 0;
-      font-family: 'VT323', monospace; /* Pixel font */
-      background-color: #1d1d1d; /* Dark dirt/stone color */
+      font-family: 'VT323', monospace;
+      background-color: #1d1d1d;
       color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      overflow: hidden; /* Keeps falling blocks from creating scrollbars */
+      overflow: hidden;
       position: relative;
     }
 
-    /* Falling Blocks Background Animation */
+    /* Falling Background Blocks */
     .background-blocks {
       position: absolute;
       top: 0;
@@ -42,14 +38,13 @@
       position: absolute;
       width: 40px;
       height: 40px;
-      background-color: #8B4513; /* Dirt brown */
-      border-top: 8px solid #32CD32; /* Grass green top */
+      background-color: #8B4513;
+      border-top: 8px solid #32CD32;
       box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), inset 4px 0px 0px rgba(255,255,255,0.1);
       top: -50px;
       animation: fall linear infinite;
     }
 
-    /* Randomizing the blocks */
     .b1 { left: 10%; animation-duration: 8s; animation-delay: 0s; transform: scale(0.8); }
     .b2 { left: 30%; animation-duration: 12s; animation-delay: 2s; transform: scale(1.2); }
     .b3 { left: 50%; animation-duration: 7s; animation-delay: 4s; }
@@ -57,39 +52,36 @@
     .b5 { left: 90%; animation-duration: 9s; animation-delay: 3s; transform: scale(1.5); }
 
     @keyframes fall {
-      0% {
-        top: -50px;
-        transform: rotate(0deg);
-      }
-      100% {
-        top: 110vh;
-        transform: rotate(360deg);
-      }
+      0% { top: -50px; transform: rotate(0deg); }
+      100% { top: 110vh; transform: rotate(360deg); }
     }
 
-    /* Main UI Container - Minecraft GUI Style */
+    /* Main GUI Box */
     .container {
       background: rgba(30, 30, 30, 0.95);
       border: 4px solid #000;
-      box-shadow: 
-        inset 4px 4px 0px #555, 
-        inset -4px -4px 0px #111,
-        0 15px 35px rgba(0,0,0,0.8);
+      box-shadow: inset 4px 4px 0px #555, inset -4px -4px 0px #111, 0 15px 35px rgba(0,0,0,0.8);
       padding: 30px 25px;
       width: 90%;
       max-width: 450px;
       text-align: center;
       position: relative;
-      z-index: 10; /* Keeps it above the falling blocks */
+      z-index: 10;
       image-rendering: pixelated;
     }
 
     h1 {
       font-size: 42px;
       margin: 0 0 15px 0;
-      color: #FFD700; /* Gold/Yellow text */
+      color: #FFD700;
       text-shadow: 3px 3px 0px #3E2723;
       letter-spacing: 2px;
+    }
+
+    h2#status-text {
+      font-size: 28px;
+      margin-bottom: 5px;
+      color: #fff;
     }
 
     p {
@@ -100,10 +92,9 @@
       text-shadow: 1px 1px 0px #000;
     }
 
-    /* Minecraft Styled Button */
     .btn {
       display: inline-block;
-      background-color: #3ca33c; /* Minecraft Green */
+      background-color: #3ca33c;
       color: white;
       padding: 12px 24px;
       font-size: 24px;
@@ -116,33 +107,47 @@
       transition: all 0.1s;
     }
 
-    .btn:hover {
-      background-color: #45ba45;
+    .btn:hover { background-color: #45ba45; }
+    .btn:active { box-shadow: inset 3px 3px 0px #246324, inset -3px -3px 0px #5cde5c; transform: translateY(2px); }
+
+    #loading-content { display: none; }
+
+    /* Progress Bar & XP Orbs */
+    .progress-container {
+      width: 100%;
+      max-width: 350px;
+      height: 24px;
+      background-color: #222;
+      border: 3px solid #000;
+      margin: 40px auto 20px auto; /* Extra top margin for orbs */
+      position: relative;
+      box-shadow: inset 2px 2px 0px #111;
     }
 
-    .btn:active {
-      box-shadow: inset 3px 3px 0px #246324, inset -3px -3px 0px #5cde5c;
-      transform: translateY(2px); /* Button press effect */
+    .progress-bar {
+      height: 100%;
+      width: 0%; 
+      background-color: #32CD32; 
+      box-shadow: inset 2px 2px 0px #5cde5c, inset -2px -2px 0px #246324;
+      transition: width 5s linear; 
     }
 
-    /* Loading State */
-    #loading-content {
-      display: none;
+    .xp-orb {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background-color: #8aff8a; /* Bright neon green */
+      border-radius: 50%;
+      box-shadow: 0 0 10px #32CD32, inset 3px 3px 2px #fff;
+      pointer-events: none;
+      animation: absorb 0.7s ease-in forwards;
+      z-index: 20;
     }
 
-    .spinner {
-      margin: 20px auto;
-      width: 40px;
-      height: 40px;
-      background-color: #fff;
-      animation: flip 1.2s infinite ease-in-out;
-      box-shadow: inset -4px -4px 0px rgba(0,0,0,0.2);
-    }
-
-    @keyframes flip {
-      0% { transform: perspective(120px) rotateX(0deg) rotateY(0deg); }
-      50% { transform: perspective(120px) rotateX(-180.1deg) rotateY(0deg); }
-      100% { transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg); }
+    @keyframes absorb {
+      0% { transform: translateY(-40px) scale(1); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translateY(5px) scale(0.3); opacity: 0; }
     }
 
     .countdown-text {
@@ -151,22 +156,29 @@
       margin-top: 15px;
     }
 
-    /* Mobile View Adjustments */
+    /* Fullscreen Iframe Container (Hidden initially) */
+    #iframe-container {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 100;
+      background-color: #1d1d1d;
+    }
+
+    #iframe-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
     @media (max-width: 480px) {
-      .container {
-        padding: 25px 15px;
-        border-width: 3px;
-      }
-      h1 {
-        font-size: 32px;
-      }
-      p {
-        font-size: 18px;
-      }
-      .btn {
-        font-size: 20px;
-        padding: 10px 20px;
-      }
+      .container { padding: 25px 15px; border-width: 3px; }
+      h1 { font-size: 32px; }
+      p { font-size: 18px; }
+      .btn { font-size: 20px; padding: 10px 20px; }
     }
   </style>
 </head>
@@ -180,7 +192,7 @@
     <div class="mc-block b5"></div>
   </div>
 
-  <div class="container">
+  <div class="container" id="gui-box">
     <div id="main-content">
       <h1>Republic MC</h1>
       <p>
@@ -190,22 +202,29 @@
     </div>
 
     <div id="loading-content">
-      <div class="spinner"></div>
-      <h2>Verifying...</h2>
-      <p class="countdown-text">Teleporting to form in <span id="countdown">3</span>s...</p>
+      <h2 id="status-text">Fetching player data...</h2>
+      
+      <div class="progress-container" id="p-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <p class="countdown-text">Time remaining: <span id="countdown">5</span>s...</p>
     </div>
   </div>
 
+  <div id="iframe-container">
+    <iframe id="google-form" src=""></iframe>
+  </div>
+
   <script>
-    // --- CONFIGURATION ---
-    const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdzjetddlEm39JaAZE67LAjZ3Cibl-B3XWTQa4RmGX9NqWocw/formResponse";
+    // Gently correcting to /viewform so it renders properly inside the iframe
+    const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdzjetddlEm39JaAZE67LAjZ3Cibl-B3XWTQa4RmGX9NqWocw/viewform";
     const ENTRY_ID = "entry.674318710";          
     const ENTRY_USERNAME = "entry.569665948";    
     const ENTRY_GLOBAL_NAME = "entry.471878909"; 
 
     const CLIENT_ID = "1375800978888065114";
     const REDIRECT_URI = "https://rmc-beta-app.netlify.app/"; 
-    // ---------------------
 
     function loginWithDiscord() {
       const authURL = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
@@ -215,9 +234,7 @@
     async function fetchUserAndRedirect(token) {
       try {
         const res = await fetch("https://discord.com/api/users/@me", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
         const user = await res.json();
         
@@ -230,13 +247,45 @@
         document.getElementById("main-content").style.display = "none";
         document.getElementById("loading-content").style.display = "block";
 
-        let countdown = 3;
-        const interval = setInterval(() => {
+        // Dynamic Loading Text Phases
+        const statusText = document.getElementById("status-text");
+        setTimeout(() => { statusText.textContent = "Building secure connection..."; }, 1500);
+        setTimeout(() => { statusText.textContent = "Verifying Discord identity..."; }, 3000);
+        setTimeout(() => { statusText.textContent = "Teleporting to application..."; }, 4200);
+
+        // Start the progress bar
+        setTimeout(() => {
+          document.getElementById("progressBar").style.width = "100%";
+        }, 50);
+
+        // XP Orb Spawner
+        const pContainer = document.getElementById("p-container");
+        const orbInterval = setInterval(() => {
+          const orb = document.createElement("div");
+          orb.className = "xp-orb";
+          // Randomize horizontal position along the bar
+          orb.style.left = Math.floor(Math.random() * 95) + "%"; 
+          pContainer.appendChild(orb);
+          // Remove from DOM after animation completes
+          setTimeout(() => orb.remove(), 700); 
+        }, 300); // Spawns an orb every 300ms
+
+        let countdown = 5; 
+        const countdownInterval = setInterval(() => {
           countdown--;
           document.getElementById("countdown").textContent = countdown;
+          
           if (countdown === 0) {
-            clearInterval(interval);
-            window.location.href = formURL;
+            clearInterval(countdownInterval);
+            clearInterval(orbInterval);
+            
+            // Hide the Minecraft GUI and show the full-screen Google Form Iframe
+            document.getElementById("gui-box").style.display = "none";
+            document.querySelector(".background-blocks").style.display = "none";
+            
+            const iframe = document.getElementById("google-form");
+            iframe.src = formURL;
+            document.getElementById("iframe-container").style.display = "block";
           }
         }, 1000);
       } catch (err) {
