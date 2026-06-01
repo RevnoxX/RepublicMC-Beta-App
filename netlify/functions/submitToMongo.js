@@ -71,7 +71,7 @@ exports.handler = async event => {
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ 
-                    content: "🎉 **Application Received!** Your Republic MC Beta Application has been successfully saved. Use `!myform` in the server to check your status! For any issue contact Madhav(gameon26) or Panda." 
+                    content: "🎉 **Application Received!** Your Republic MC Beta Tester Application has been successfully saved. Use `!myform` in the server to check your status! For any issue contact Madhav(gameon26) or Panda." 
                 })
               });
             }
